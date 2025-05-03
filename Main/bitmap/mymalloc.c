@@ -1,10 +1,10 @@
 #include "mymalloc.h"
-
+#include "llist.h"
+#include "bitmap.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "bitmap.h"
-#include "llist.h"
+
 
 char _heap[MEMSIZE] = {0};
 static TNode *alloc_list = NULL;

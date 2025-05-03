@@ -1,3 +1,5 @@
+#include <stddef.h>  
+
 #define MEMSIZE 64         // Size of memory in bytes
 
 // Used by the test harness
