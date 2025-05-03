@@ -28,6 +28,7 @@ TNode* search_list(TNode *llist, int size) {
             }
         }
     } while(node != NULL);
+    return NULL;
 }
 
 void *mymalloc(size_t size) {
@@ -71,18 +72,12 @@ void *mymalloc(size_t size) {
 
 void myfree(void *ptr) {
     if (!ptr) return;
-    
-    TNode *node = find_node(_memlist, get_index(ptr));
-    if (node == NULL) return;
-    node->pdata->is_empty = 1;
-    // merge with succ
-    if (succ(node) != NULL && succ(node)->pdata->is_empty == 1) {
-        TNode *s = succ(node);
-        node->pdata->size += s->pdata->size;
 
-        delete_node(&_memlist, s);
-        free_data(s);
-    }
+    TNode *node = find_node(_memlist, get_index(ptr));
+    TData *block = node->pdata;
+
+    node->pdata->is_empty = 1;
+    
     return;
 }
 
