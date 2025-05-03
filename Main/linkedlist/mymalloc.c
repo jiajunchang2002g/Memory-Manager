@@ -1,8 +1,6 @@
 #include "mymalloc.h"
-
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "llist.h"
 
 char _heap[MEMSIZE] = {0};
@@ -102,3 +100,31 @@ void myprint(TNode *node) {
 }
 
 void print_memlist() { process_list(_memlist, myprint); }
+
+void print_node(TNode *node) {
+    if(node != NULL) { 
+        printf("STATUS: ");
+        if (node->pdata->is_empty) printf("FREE ");
+        else printf("ALLOCATED ");
+        printf("Start index: %i Length: %lu\n", node->pdata->start,
+        node->pdata->size);
+        printf("Key: %d\n", node->key);
+    }
+    else
+        printf("Unable to find key.\n");
+}
+
+void free_data(TNode *node) {
+    free(node->pdata);
+}
+
+void trav_list(TNode *llist) {
+    reset_traverser(llist, FRONT);
+    TNode *node;
+
+    do {
+        node = succ(llist);
+        if(node)
+            print_node(node);
+    } while(node != NULL);
+}
