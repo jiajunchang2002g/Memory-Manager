@@ -6,36 +6,45 @@
 char _heap[MEMSIZE] = {0};
 TNode *_memlist = NULL;
 
-long get_index(void *ptr) {
+long get_index(void *ptr)
+{
     if (ptr == NULL)
         return -1;
     else
         return (long)((char *)ptr - &_heap[0]);
 }
 
-void free_data(TNode *node) {
+void free_data(TNode *node)
+{
     free(node->pdata);
 }
 
-TNode* search_list(TNode *llist, int size) {
+TNode *search_list(TNode *llist, int size)
+{
     reset_traverser(llist, FRONT);
     TNode *node;
-    do {
+    do
+    {
         node = succ(llist);
-        if(node) {
-            if(node->pdata->is_empty && node->pdata->size >= size) {
+        if (node)
+        {
+            if (node->pdata->is_empty && node->pdata->size >= size)
+            {
                 return node;
             }
         }
-    } while(node != NULL);
+    } while (node != NULL);
     return NULL;
 }
 
-void *mymalloc(size_t size) {
-    if (size <= 0 || size > MEMSIZE) return NULL;
+void *mymalloc(size_t size)
+{
+    if (size <= 0 || size > MEMSIZE)
+        return NULL;
 
-    if (_memlist == NULL) {
-        // allocated space
+    // start with an empty node of full space
+    if (!_memlist)
+    {
         TData *data = malloc(sizeof(TData));
         data->size = MEMSIZE;
         data->start = 0;
@@ -45,54 +54,75 @@ void *mymalloc(size_t size) {
         insert_node(&_memlist, node, ASCENDING);
     }
 
-    TNode* node = search_list(_memlist, size);
-    // no free node found
-    if (!node) return NULL;
-    // free node found
-    TData *block = node->pdata;
-    if (block->size == size) {
-        block->is_empty = 0;
-        return &_heap[block->start];
-    } else {
-        // split block
-        TData *newblock = malloc(sizeof(TData));
-                newblock->start = block->start + size;
-                newblock->size = block->size - size;
-                newblock->is_empty = 1;
+    TNode *node = search_list(_memlist, size);
+    if (node)
+    {
+        TData *block = node->pdata;
+        if (block->size == size)
+        {
+            block->is_empty = 0;
+            return &_heap[block->start];
+        }
+        else if (block->size > size)
+        {
+            // split block
+            TData *newblock = malloc(sizeof(TData));
+            newblock->start = block->start + size;
+            newblock->size = block->size - size;
+            newblock->is_empty = 1;
 
-                block->size = size;
-                block->is_empty = 0;
+            block->size = size;
+            block->is_empty = 0;
 
-                TNode *newnode = make_node(newblock->start, newblock);
-                insert_node(&_memlist, newnode, ASCENDING);
+            TNode *newnode = make_node(newblock->start, newblock);
+            insert_node(&_memlist, newnode, ASCENDING);
 
-                return &_heap[block->start];
+            return &_heap[block->start];
+        }
+        return NULL;
     }
 }
 
-void myfree(void *ptr) {
+void myfree(void *ptr)
+{
     if (!ptr) return;
-
+    reset_traverser(_memlist, FRONT);
     TNode *node = find_node(_memlist, get_index(ptr));
-    TData *block = node->pdata;
 
-    node->pdata->is_empty = 1;
+    if (!node) return;
     
+    TData *block = node->pdata;
+    block->is_empty = 1;
+
+    TNode *prev = node->prev;
+    if (prev) {
+        TData *prevblock = prev->pdata;
+        if (prevblock->is_empty) {
+            merge_node(_memlist, node, PRECEDING);
+            // update variables for later use
+            node = prev;
+            block = node->pdata;
+        }
+    }
+
+    TNode *next = node->next;
+        if (next) {
+            TData *nextblock = next->pdata;
+            if (nextblock->is_empty) {
+                merge_node(_memlist, node, SUCCEEDING);
+            }
+        }
     return;
 }
 
-void myprint(TNode *node) {
-    printf("STATUS: ");
-    if (node->pdata->is_empty) {
-        printf("FREE ");
-    } else {
-        printf("ALLOCATED ");
-    }
-    printf("Start index: %i Length: %lu\n", node->pdata->start,
-           node->pdata->size);
+void myprint(TNode *node)
+{
+    TData *block = node->pdata;
+    printf("Start: %5d | Size: %5zu | Status: %d\n",
+           block->start, block->size, block->is_empty);
 }
 
-void print_memlist() { 
-    process_list(_memlist, myprint); 
+void print_memlist()
+{
+    process_list(_memlist, myprint);
 }
-
